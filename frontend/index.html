@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Marketplace</title>
+</head>
+
+<body style="font-family: Arial; padding:40px;">
+
+<h1>🎓 Student Marketplace</h1>
+
+<h2>Add Item</h2>
+
+<input id="name" placeholder="Item name"><br><br>
+<input id="price" placeholder="Price"><br><br>
+<input id="description" placeholder="Description"><br><br>
+<input id="owner" placeholder="Owner name"><br><br>
+<input id="college" placeholder="College"><br><br>
+<input id="contact" placeholder="Contact"><br><br>
+<input id="category" placeholder="Category"><br><br>
+
+<button onclick="addItem()">Add Item</button>
+<button onclick="showItems()">Show Items</button>
+
+<hr>
+<h2>Items:</h2>
+<div id="items"></div>
+
+<script>
+
+async function addItem(){
+
+    const item = {
+        name: document.getElementById("name").value,
+        price: parseInt(document.getElementById("price").value),
+        description: document.getElementById("description").value,
+        owner: document.getElementById("owner").value,
+        college: document.getElementById("college").value,
+        contact: document.getElementById("contact").value,
+        category: document.getElementById("category").value
+    };
+
+    await fetch("http://127.0.0.1:8000/add-item",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify(item)
+    });
+
+    alert("Item added successfully");
+}
+
+async function showItems(){
+    const res = await fetch("http://127.0.0.1:8000/items");
+    const data = await res.json();
+
+    let output="";
+    data.forEach(i=>{
+        output += `
+        <div style="border:1px solid black; padding:10px; margin:10px;">
+        <h3>${i.name}</h3>
+        <p>Price: ₹${i.price}</p>
+        <p>${i.description}</p>
+        <p>Owner: ${i.owner}</p>
+        <p>College: ${i.college}</p>
+        <p>Contact: ${i.contact}</p>
+        <p>Category: ${i.category}</p>
+        </div>
+        `;
+    });
+
+    document.getElementById("items").innerHTML = output;
+}
+
+</script>
+
+</body>
+</html>
