@@ -2,74 +2,208 @@
 <html>
 <head>
     <title>Student Marketplace</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        body{
+            font-family: Arial;
+            margin:0;
+            background:#f5f7fb;
+        }
+
+        /* navbar */
+        .navbar{
+            background: linear-gradient(90deg,#0f172a,#2563eb);
+            color:white;
+            padding:18px;
+            text-align:center;
+            font-size:24px;
+            font-weight:bold;
+            letter-spacing:1px;
+        }
+
+        .container{
+            width:90%;
+            margin:auto;
+            margin-top:25px;
+        }
+
+        /* form */
+        .form-box{
+            background:white;
+            padding:25px;
+            border-radius:12px;
+            box-shadow:0 6px 18px rgba(0,0,0,0.1);
+            margin-bottom:30px;
+        }
+
+        input{
+            width:100%;
+            padding:12px;
+            margin:8px 0;
+            border-radius:8px;
+            border:1px solid #ccc;
+            font-size:15px;
+        }
+
+        button{
+            width:100%;
+            padding:14px;
+            border:none;
+            background:#2563eb;
+            color:white;
+            font-size:16px;
+            border-radius:10px;
+            cursor:pointer;
+            font-weight:bold;
+        }
+
+        button:hover{
+            background:#1e40af;
+        }
+
+        /* search */
+        .search{
+            padding:12px;
+            width:100%;
+            margin-bottom:20px;
+            border-radius:10px;
+            border:1px solid #ccc;
+        }
+
+        /* grid */
+        .grid{
+            display:grid;
+            grid-template-columns: repeat(auto-fit,minmax(250px,1fr));
+            gap:20px;
+        }
+
+        /* card */
+        .card{
+            background:white;
+            padding:18px;
+            border-radius:12px;
+            box-shadow:0 6px 16px rgba(0,0,0,0.1);
+            transition:0.3s;
+        }
+
+        .card:hover{
+            transform:translateY(-5px);
+        }
+
+        .price{
+            font-size:20px;
+            font-weight:bold;
+            color:green;
+        }
+
+        .owner{
+            margin-top:10px;
+            color:#555;
+        }
+
+        .delete{
+            margin-top:15px;
+            background:#ef4444;
+        }
+
+        .delete:hover{
+            background:#b91c1c;
+        }
+    </style>
 </head>
 
-<body style="font-family: Arial; padding:40px;">
+<body>
 
-<h1>🎓 Student Marketplace</h1>
+<div class="navbar">🎓 Student Marketplace</div>
 
-<h2>Add Item</h2>
+<div class="container">
 
-<input id="name" placeholder="Item name"><br><br>
-<input id="price" placeholder="Price"><br><br>
-<input id="description" placeholder="Description"><br><br>
-<input id="owner" placeholder="Owner name"><br><br>
-<input id="college" placeholder="College"><br><br>
-<input id="contact" placeholder="Contact"><br><br>
-<input id="category" placeholder="Category"><br><br>
+    <!-- ADD ITEM -->
+    <div class="form-box">
+        <h2>Add Item</h2>
 
-<button onclick="addItem()">Add Item</button>
-<button onclick="showItems()">Show Items</button>
+        <input id="name" placeholder="Item name">
+        <input id="price" placeholder="Price">
+        <input id="description" placeholder="Description">
+        <input id="owner" placeholder="Your name">
+        <input id="college" placeholder="College">
+        <input id="contact" placeholder="Contact">
+        <input id="category" placeholder="Category (book/mobile/laptop)">
 
-<hr>
-<h2>Items:</h2>
-<div id="items"></div>
+        <button onclick="addItem()">Add Item</button>
+    </div>
+
+    <!-- SEARCH -->
+    <input class="search" id="search" placeholder="Search items..." onkeyup="searchItem()">
+
+    <h2>Available Items</h2>
+    <div class="grid" id="items"></div>
+
+</div>
 
 <script>
+const API="http://127.0.0.1:8000"
+
+async function loadItems(){
+    let res=await fetch(API+"/items")
+    let data=await res.json()
+
+    display(data)
+}
+
+function display(data){
+    let box=document.getElementById("items")
+    box.innerHTML=""
+
+    data.forEach(item=>{
+        box.innerHTML+=`
+        <div class="card">
+            <h3>${item.name}</h3>
+            <p>${item.description}</p>
+            <div class="price">₹ ${item.price}</div>
+            <div class="owner">👤 ${item.owner}</div>
+            <div>📞 ${item.contact}</div>
+            <button class="delete" onclick="deleteItem(${item.id})">Delete</button>
+        </div>`
+    })
+}
 
 async function addItem(){
+    let name=document.getElementById("name").value
+    let price=document.getElementById("price").value
+    let description=document.getElementById("description").value
+    let owner=document.getElementById("owner").value
+    let college=document.getElementById("college").value
+    let contact=document.getElementById("contact").value
+    let category=document.getElementById("category").value
 
-    const item = {
-        name: document.getElementById("name").value,
-        price: parseInt(document.getElementById("price").value),
-        description: document.getElementById("description").value,
-        owner: document.getElementById("owner").value,
-        college: document.getElementById("college").value,
-        contact: document.getElementById("contact").value,
-        category: document.getElementById("category").value
-    };
+    await fetch(`${API}/add-item?name=${name}&price=${price}&description=${description}&owner=${owner}&college=${college}&contact=${contact}&category=${category}`,{
+        method:"POST"
+    })
 
-    await fetch("http://127.0.0.1:8000/add-item",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body: JSON.stringify(item)
-    });
-
-    alert("Item added successfully");
+    loadItems()
 }
 
-async function showItems(){
-    const res = await fetch("http://127.0.0.1:8000/items");
-    const data = await res.json();
-
-    let output="";
-    data.forEach(i=>{
-        output += `
-        <div style="border:1px solid black; padding:10px; margin:10px;">
-        <h3>${i.name}</h3>
-        <p>Price: ₹${i.price}</p>
-        <p>${i.description}</p>
-        <p>Owner: ${i.owner}</p>
-        <p>College: ${i.college}</p>
-        <p>Contact: ${i.contact}</p>
-        <p>Category: ${i.category}</p>
-        </div>
-        `;
-    });
-
-    document.getElementById("items").innerHTML = output;
+async function deleteItem(id){
+    await fetch(API+"/delete-item/"+id,{method:"DELETE"})
+    loadItems()
 }
 
+function searchItem(){
+    let input=document.getElementById("search").value.toLowerCase()
+    let cards=document.querySelectorAll(".card")
+
+    cards.forEach(card=>{
+        if(card.innerText.toLowerCase().includes(input)){
+            card.style.display="block"
+        }else{
+            card.style.display="none"
+        }
+    })
+}
+
+loadItems()
 </script>
 
 </body>

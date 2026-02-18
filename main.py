@@ -1,14 +1,24 @@
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
+from fastapi.middleware.cors import CORSMiddleware
 import models.item as models
 from database import engine, SessionLocal, Base
 
 app = FastAPI()
 
-# create database tables
+# ================= CORS FIX =================
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],   # allow frontend to talk to backend
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ============ CREATE DATABASE TABLES ============
 Base.metadata.create_all(bind=engine)
 
-# dependency to get DB
+# ============ DATABASE CONNECTION ============
 def get_db():
     db = SessionLocal()
     try:
@@ -16,12 +26,12 @@ def get_db():
     finally:
         db.close()
 
-# home route
+# ============ HOME ROUTE ============
 @app.get("/")
 def home():
     return {"message": "Student Marketplace backend running with DB"}
 
-# add item
+# ============ ADD ITEM ============
 @app.post("/add-item")
 def add_item(
     name: str,
@@ -46,22 +56,27 @@ def add_item(
     db.commit()
     db.refresh(new_item)
 
-    return {"message": "Item added to database"}
+    return {"message": "Item added successfully"}
 
-# get items
+# ============ GET ALL ITEMS ============
 @app.get("/items")
 def get_items(db: Session = Depends(get_db)):
     items = db.query(models.Item).all()
     return items
 
-# delete item
+# ============ DELETE ITEM ============
 @app.delete("/delete-item/{item_id}")
 def delete_item(item_id: int, db: Session = Depends(get_db)):
     item = db.query(models.Item).filter(models.Item.id == item_id).first()
-    
+
     if not item:
         return {"error": "Item not found"}
 
     db.delete(item)
     db.commit()
     return {"message": "Item deleted"}
+
+import uvicorn
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
